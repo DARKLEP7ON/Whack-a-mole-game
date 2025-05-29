@@ -1,13 +1,19 @@
 // script.js
 const holes = document.querySelectorAll('.hole');
 const scoreDisplay = document.getElementById('score');
-const timeLeftDisplay = document.getElementById('time-left');
+const highScoreDisplay = document.getElementById('high-score');
+const timeBar = document.getElementById('progress-bar');
+const difficultySelect = document.getElementById('difficulty');
 const startButton = document.getElementById('start-button');
 
 let score = 0;
+let highScore = localStorage.getItem('whackHighScore') || 0;
 let timeLeft = 30;
-let timerId = null;
+let gameTime = 30;
 let moleTimerId = null;
+let countdownId = null;
+
+highScoreDisplay.textContent = highScore;
 
 function randomHole() {
   holes.forEach(hole => hole.classList.remove('up'));
@@ -18,24 +24,31 @@ function randomHole() {
 
 function startGame() {
   score = 0;
-  timeLeft = 30;
+  timeLeft = gameTime;
   scoreDisplay.textContent = score;
-  timeLeftDisplay.textContent = timeLeft;
+  timeBar.style.width = '100%';
   startButton.disabled = true;
 
-  timerId = setInterval(() => {
+  const difficulty = parseInt(difficultySelect.value);
+
+  countdownId = setInterval(() => {
     timeLeft--;
-    timeLeftDisplay.textContent = timeLeft;
-    if (timeLeft === 0) {
-      clearInterval(timerId);
+    timeBar.style.width = `${(timeLeft / gameTime) * 100}%`;
+    if (timeLeft <= 0) {
+      clearInterval(countdownId);
       clearInterval(moleTimerId);
       holes.forEach(hole => hole.classList.remove('up'));
-      alert(`Game Over! Your score is ${score}.`);
       startButton.disabled = false;
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('whackHighScore', highScore);
+        highScoreDisplay.textContent = highScore;
+      }
+      alert(`Game Over! Your score is ${score}.`);
     }
   }, 1000);
 
-  moleTimerId = setInterval(randomHole, 800);
+  moleTimerId = setInterval(randomHole, difficulty);
 }
 
 holes.forEach(hole => {
@@ -49,3 +62,5 @@ holes.forEach(hole => {
 });
 
 startButton.addEventListener('click', startGame);
+
+
